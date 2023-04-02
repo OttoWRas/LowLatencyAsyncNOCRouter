@@ -1,0 +1,3 @@
+[submodule "Async-Click-Library"]
+	path = Async-Click-Library
+	url = https://github.com/OttoWRas/Async-Click-Library.git
