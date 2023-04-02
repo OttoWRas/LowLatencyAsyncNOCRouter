@@ -1,0 +1,41 @@
+{
+    "version": "1.0.0",
+    "tasks": [
+      {
+        "label": "Analyse",
+        "command": "ghdl",
+        "args": ["-a", "${fileBasename}"]
+      },
+      {
+        "label": "Build Executable",
+        "command": "ghdl",
+        "args": ["-e", "${fileBasenameNoExtension}_tb"]
+      },
+      {
+        "label": "Run Executable",
+        "command": "ghdl",
+        "args": ["-r", "${fileBasenameNoExtension}_tb", "--vcd=${fileBasenameNoExtension}.vcd"]
+      },
+      {
+        "label": "Show Signals",
+        "type": "shell",
+        "command": "gtkwave",
+        "presentation": {
+            "echo": true,
+            "reveal": "never",
+            "focus": false,
+            "panel": "shared",
+            "showReuseMessage": true,
+            "clear": false
+        },
+        "args": ["${fileBasenameNoExtension}.vcd"],
+        "dependsOrder": "sequence",
+        "dependsOn": ["Analyse", "Build Executable", "Run Executable"]
+      },
+      {
+      "label": "Reload Signals",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Analyse", "Build Executable", "Run Executable"]
+    },
+    ]
+  }
