@@ -30,9 +30,8 @@ ARCHITECTURE impl OF router_top IS
 
     SIGNAL req_inter_mid : logic_arr_l;
     SIGNAL req_inter_out : logic_arr_l;
-
     SIGNAL data_inter_mid : data_arr_l;
-    SIGNAL data_inter_out : data_arr_l;
+    SIGNAL ack_inter_mid : logic_arr_l;
 
 BEGIN
 
@@ -48,19 +47,20 @@ BEGIN
             rx => rx,
             ry => ry)
             PORT MAP(
-                req_inter(i), data_inter(i), req_inter_mid(i)
+                rst, req_inter(i), ack_inter(i), data_inter(i),
+                req_inter_mid(i), data_inter_mid(i), ack_inter_mid(i) 
             );
     END GENERATE;
 
-    outerloop : FOR i IN 0 TO 4 GENERATE
-        innerloop : FOR j IN 0 TO 4 GENERATE
+    outerloop : FOR i IN 0 TO 3 GENERATE
+        innerloop : FOR j IN 0 TO 3 GENERATE
             req_inter_out(i)(j) <= req_inter_mid(j)(i);
         END GENERATE;
     END GENERATE;
 
     out_block : FOR i IN 0 TO 4 GENERATE
         o : ENTITY outport PORT MAP(
-            rst, req_inter_out(i), data_inter, ack_inter,
+            rst, req_inter_out(i), data_inter_mid(i), ack_inter_mid(i),
             req_out(i), ack_out(i), data_out(i)
             );
     END GENERATE;
