@@ -12,14 +12,14 @@ ENTITY routing IS
     GENERIC (
         -- The internal id / position of the router
         inport : INTEGER := 0;
-        rx : INTEGER := 0;
-        ry : INTEGER := 0
+        rx : unsigned(3 DOWNTO 0);
+        ry : unsigned(3 DOWNTO 0)
     );
     PORT (
         rst : IN STD_LOGIC;
         req_in : IN STD_LOGIC;
         ack_in : OUT STD_LOGIC;
-        data_in : IN STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
+        data_in : IN STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0) := (others => '0');
         out_req : OUT logic_arr_s;
         out_data : OUT data_arr_s;
         out_ack : IN logic_arr_s
@@ -28,23 +28,18 @@ END ENTITY;
 
 ARCHITECTURE impl OF routing IS
 
-    SIGNAL Xi : unsigned(3 DOWNTO 0);
-    SIGNAL Yi : unsigned(3 DOWNTO 0);
-    SIGNAL req_inter : STD_LOGIC_VECTOR(4 DOWNTO 0);
+    SIGNAL Xi : unsigned(3 DOWNTO 0) := (others => '0');
+    SIGNAL Yi : unsigned(3 DOWNTO 0) := (others => '0');
+    SIGNAL req_inter : STD_LOGIC_VECTOR(4 DOWNTO 0) := (others => '0');
     SIGNAL selector : std_logic_vector(3 downto 0);
-    SIGNAL req_a, req_b, req_c : STD_LOGIC;
-    SIGNAL ack_a, ack_b, ack_c : STD_LOGIC;
+    SIGNAL req_a, req_b : STD_LOGIC;
+    SIGNAL ack_a, ack_b : STD_LOGIC;
 
 BEGIN
 
-    f : ENTITY fork PORT MAP (
-        rst, req_in, ack_in,
-        req_a, ack_a, req_b, ack_b
-        );
-
     oh_dmux : ENTITY oh_4_demux PORT MAP (
-        rst, req_a, data_in, ack_a,
-        req_c, ack_b, selector,
+        rst, req_a, data_in, ack_in,
+        selector,
         out_req(0), out_data(0), out_ack(0),
         out_req(1), out_data(1), out_ack(1),
         out_req(2), out_data(2), out_ack(2),
@@ -53,38 +48,38 @@ BEGIN
 
     d : ENTITY delay_element
         GENERIC MAP(
-            size => 4 -- Delay size
+            size => 6 -- Delay size
         )
         PORT MAP(
-            req_b,
-            req_c
+            req_in,
+            req_a
         );
 
-    Xi <= unsigned(data_in(7 DOWNTO 4));
-    Yi <= unsigned(data_in(3 DOWNTO 0));
+    Yi <= unsigned(data_in(7 DOWNTO 4));
+    Xi <= unsigned(data_in(3 DOWNTO 0));
 
         NORTH_GEN : IF inport /= 0 GENERATE
-            req_inter(0) <= '1' AFTER AND2_DELAY WHEN Xi < rx ELSE
+            req_inter(0) <= '1' AFTER AND2_DELAY WHEN Yi > ry ELSE
             '0' AFTER AND2_DELAY;
         END GENERATE NORTH_GEN;
 
-        SOUTH_GEN : IF inport /= 1 GENERATE
-            req_inter(1) <= '1' AFTER AND2_DELAY WHEN Xi > rx ELSE
+        EAST_GEN : IF inport /= 1 GENERATE
+            req_inter(1) <= '1' AFTER AND3_DELAY WHEN (Yi = ry) AND (Xi > rx) ELSE
+        '0' AFTER AND3_DELAY;
+        END GENERATE EAST_GEN;
+
+        SOUTH_GEN : IF inport /= 2 GENERATE
+            req_inter(2) <= '1' AFTER AND2_DELAY WHEN Yi < ry ELSE
             '0' AFTER AND2_DELAY;
         END GENERATE SOUTH_GEN;
 
-        WEST_GEN : IF inport /= 2 GENERATE
-            req_inter(2) <= '1' AFTER AND3_DELAY WHEN (Xi = rx) AND (Yi > ry) ELSE
+        WEST_GEN : IF inport /= 3 GENERATE
+            req_inter(3) <= '1' AFTER AND3_DELAY WHEN (Yi = ry) AND (Xi < rx) ELSE
             '0' AFTER AND3_DELAY;
         END GENERATE WEST_GEN;
 
-        EAST_GEN : IF inport /= 3 GENERATE
-            req_inter(3) <= '1' AFTER AND3_DELAY WHEN (Xi = rx) AND (Yi < ry) ELSE
-            '0' AFTER AND3_DELAY;
-        END GENERATE EAST_GEN;
-
         LOCAL_GEN : IF inport /= 4 GENERATE
-            req_inter(4) <= '1' AFTER AND3_DELAY WHEN (Xi = rx) AND (Yi = ry) ELSE
+            req_inter(4) <= '1' AFTER AND3_DELAY WHEN (Yi = ry) AND (Xi = rx) ELSE
             '0' AFTER AND3_DELAY;
         END GENERATE LOCAL_GEN;
 

@@ -7,9 +7,9 @@ USE work.defs.ALL;
 ENTITY outport IS
     PORT (
         rst : IN STD_LOGIC;
-        req_in : IN logic_arr;
-        data_in : IN data_arr;
-        ack_in : OUT logic_arr;
+        req_in : IN logic_arr_s;
+        data_in : IN data_arr_s;
+        ack_in : OUT logic_arr_s;
         req_out : OUT STD_LOGIC;
         ack_out : IN STD_LOGIC;
         data_out : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0)
